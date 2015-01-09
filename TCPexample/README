@@ -1,0 +1,5 @@
+Example code using TCP/IP protocol with C++
+Example and documentation found at http://www.linuxhowtos.org/C_C++/socket.htm
+
+server.c and client.c are original files
+server2.c is commented and reformatted to facilitate understanding the underlying process
