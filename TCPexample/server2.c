@@ -3,6 +3,7 @@
 
 // From:
 // http://www.linuxhowtos.org/C_C++/socket.htm
+// commented for reference
 
 #include <stdio.h>
 #include <stdlib.h>
