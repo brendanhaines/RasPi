@@ -2,6 +2,7 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import javax.swing.event.*;
 import java.awt.image.*;
 import javax.swing.border.*;
 
@@ -14,7 +15,7 @@ import java.net.*;
  * Replaces GroundStation.java
  * Written by Brendan Haines
  */
-class GroundStation implements ActionListener, Runnable {
+class GroundStation implements ActionListener, ChangeListener, Runnable {
 
     //////////////////
     ///// FIELDS /////
@@ -32,6 +33,8 @@ class GroundStation implements ActionListener, Runnable {
     private PrintWriter tcpOut;
     /** thread to listen to tcpSocket */
     private Thread tcpListener;
+    /** FC arm status */
+    private boolean armStatus = false;
 
     // Main GUI components
     /** window to hold GUI */
@@ -86,8 +89,20 @@ class GroundStation implements ActionListener, Runnable {
             private JButton calibrateImuButton;
         /** motor testing tab */
         private JPanel motorTestPanel;
-            /** placeholder */
-            private JLabel motorTestPlaceholder;
+            /** Motor testing enable checkbox */
+            private JCheckBox motorTestEnableCheckBox;
+            /** Motor test values panel */
+            private JPanel motorTestValuesPanel;
+                /** Motor 0 slider */
+                private JSlider motor0Slider;
+                /** Motor 1 slider */
+                private JSlider motor1Slider;
+                /** Motor 2 slider */
+                private JSlider motor2Slider;
+                /** Motor 3 slider */
+                private JSlider motor3Slider;
+                /** Master slider. sets all motor sliders to its value when changed */
+                private JSlider motorMasterSlider;
 
     ////////////////////////
     ///// CONSTRUCTORS /////
@@ -239,8 +254,44 @@ class GroundStation implements ActionListener, Runnable {
     private void setupMotorTestTab() {
         motorTestPanel = new JPanel();
         motorTestPanel.setLayout( new BorderLayout() );
-        motorTestPlaceholder = new JLabel( "Motor Test Tab Placeholder" );
-        motorTestPanel.add( motorTestPlaceholder, BorderLayout.NORTH );
+
+        motorTestEnableCheckBox = new JCheckBox( "Enable Motor Testing" );
+        motorTestEnableCheckBox.setSelected( false );
+        motorTestEnableCheckBox.addActionListener( this );
+
+        motorTestValuesPanel = new JPanel();
+        motorTestValuesPanel.setLayout( new FlowLayout() );
+
+        motor0Slider = new JSlider( 150, 600, 150 );
+        motor0Slider.setOrientation( JSlider.VERTICAL );
+        motor0Slider.addChangeListener( this );
+
+        motor1Slider = new JSlider( 150, 600, 150 );
+        motor1Slider.setOrientation( JSlider.VERTICAL );
+        motor1Slider.addChangeListener( this );
+
+        motor2Slider = new JSlider( 150, 600, 150 );
+        motor2Slider.setOrientation( JSlider.VERTICAL );
+        motor2Slider.addChangeListener( this );
+
+        motor3Slider = new JSlider( 150, 600, 150 );
+        motor3Slider.setOrientation( JSlider.VERTICAL );
+        motor3Slider.addChangeListener( this );
+
+        motorMasterSlider = new JSlider( 150, 600, 150 );
+        motorMasterSlider.setOrientation( JSlider.VERTICAL );
+        motorMasterSlider.addChangeListener( this );
+
+        motorTestValuesPanel.add( motor0Slider );
+        motorTestValuesPanel.add( motor1Slider );
+        motorTestValuesPanel.add( motor2Slider );
+        motorTestValuesPanel.add( motor3Slider );
+        motorTestValuesPanel.add( motorMasterSlider );
+
+        enableComponents( motorTestValuesPanel, false );
+
+        motorTestPanel.add( motorTestEnableCheckBox, BorderLayout.NORTH );
+        motorTestPanel.add( motorTestValuesPanel, BorderLayout.CENTER );
     }
 
     /**
@@ -318,6 +369,7 @@ class GroundStation implements ActionListener, Runnable {
         else if( evt.getSource().equals( armDisarmButton ) && evt.getActionCommand().equals( "arm" ) ){
             cliCommandArea.append( "--ARMING..." );
             tcpOut.println( "ARM_CONTROLLER" );
+            armStatus = true;
             armDisarmButton.setText( "disarm" );
             cliCommandArea.append( "DONE\n" );
         }
@@ -326,8 +378,43 @@ class GroundStation implements ActionListener, Runnable {
         else if( evt.getSource().equals( armDisarmButton ) && evt.getActionCommand().equals( "disarm" ) ) {
             cliCommandArea.append( "--DISARMING..." );
             tcpOut.println( "DISARM_CONTROLLER" );
+            armStatus = false;
             armDisarmButton.setText( "arm" );
             cliCommandArea.append( "DONE\n" );
+        }
+
+        // motor test checkbox
+        else if( evt.getSource().equals( motorTestEnableCheckBox ) ) {
+            if( motorTestEnableCheckBox.isSelected() ) {
+                enableComponents( motorTestValuesPanel, true );
+            }
+            else {
+                disableMotorTest();
+            }
+        }
+    }
+
+    /**
+     * handles changes in JSlider positions
+     */
+    public void stateChanged( ChangeEvent evt ) {
+        if( evt.getSource().equals( motor0Slider ) ) {
+            tcpOut.println( "SET_MOTOR_00_" + motor0Slider.getValue() );
+        }
+        else if( evt.getSource().equals( motor1Slider ) ) {
+            tcpOut.println( "SET_MOTOR_01_" + motor1Slider.getValue() );
+        }
+        else if( evt.getSource().equals( motor2Slider ) ) {
+            tcpOut.println( "SET_MOTOR_02_" + motor2Slider.getValue() );
+        }
+        else if( evt.getSource().equals( motor3Slider ) ) {
+            tcpOut.println( "SET_MOTOR_03_" + motor3Slider.getValue() );
+        }
+        else if( evt.getSource().equals( motorMasterSlider ) ) {
+            motor0Slider.setValue( motorMasterSlider.getValue() );
+            motor1Slider.setValue( motorMasterSlider.getValue() );
+            motor2Slider.setValue( motorMasterSlider.getValue() );
+            motor3Slider.setValue( motorMasterSlider.getValue() );
         }
     }
 
@@ -419,8 +506,10 @@ class GroundStation implements ActionListener, Runnable {
      * disconnects from whatever connection has been set up with Raspberry Pi
      */
     private void disconnect() {
-        cliCommandArea.append( "--DISCONNECTING...");
+        cliCommandArea.append( "--DISCONNECTING...\n");
         
+        disableMotorTest();
+//        Thread.sleep( 5 );
         tcpOut.println( "DISCONNECT" );
 
         try {
@@ -435,6 +524,25 @@ class GroundStation implements ActionListener, Runnable {
         setGuiDisconnected();
         connectionStatus = false;
         cliCommandArea.append( "DONE\n" );
+    }
+
+    /**
+     *
+     */
+    private void disableMotorTest() {
+        motorMasterSlider.setValue( 150 );
+        motor0Slider.setValue( 150 );
+        motor1Slider.setValue( 150 );
+        motor2Slider.setValue( 150 );
+        motor3Slider.setValue( 150 );
+        enableComponents( motorTestValuesPanel, false );
+
+        try{
+            Thread.sleep( 500 );
+        }
+        catch( Exception e ) {}
+
+        motorTestEnableCheckBox.setSelected( false );
     }
 
     /**
