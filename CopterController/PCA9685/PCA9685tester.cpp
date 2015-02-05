@@ -1,6 +1,5 @@
 
 #include <iostream>
-#include "stdio.h"
 #include "wiringPi.h"
 #include "PCA9685.h"
 
