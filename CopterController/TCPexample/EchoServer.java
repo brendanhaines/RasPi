@@ -1,12 +1,15 @@
+/**
+ * 
+ */
+
 import java.lang.*;
 import java.io.*;
 import java.net.*;
 
 /**
  * Echo server. if receives "DISCONNECT", will shut down server properly
- * Used for testing GroundStation communications
  */
-class Server {
+class EchoServer {
    public static void main(String args[]) {
       ServerSocket srvr;
       Socket skt;
