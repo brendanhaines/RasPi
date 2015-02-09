@@ -1,6 +1,6 @@
 Ground Station
 ==============
-
+v1 Groundstation uses a single class file, hampering easy future upgrades. v2 will use multiple classes.
 Acknowledgements:
 -----------------
 SmartScroller class found at:  
