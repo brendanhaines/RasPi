@@ -1,4 +1,5 @@
 #include <iostream>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -28,15 +29,15 @@ MPU6050 mpu;
 #define SERVO_FREQ 60
 PCA9685 servo;
 
-void setupTCP( portno )
+void setupTCP( int portno )
 {
     struct sockaddr_in serv_addr, cli_addr;
     socklen_t clilen;
 
     std::cout << "setting up TCP on port " << portno << std::endl;
-    sockfd = socket( AF_INET, SOCKET_STREAM, 0 );
+    sockfd = socket( AF_INET, SOCK_STREAM, 0 );
     if( sockfd < 0 )
-        cerror << "ERROR opening socket" << std::endl;
+        std::cerr << "ERROR opening socket" << std::endl;
 
     bzero( (char*) &serv_addr, sizeof(serv_addr) );
     serv_addr.sin_family = AF_INET;
@@ -45,7 +46,7 @@ void setupTCP( portno )
 
     std::cout << "binding socket to portno" << std::endl;
     if( bind( sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr) ) )
-        cerror << "ERROR binding socket to portno" << std::endl;
+        std::cerr << "ERROR binding socket to portno" << std::endl;
 
     std::cout << "listening to socket" << std::endl;
     listen( sockfd, 5 );
@@ -54,11 +55,11 @@ void setupTCP( portno )
     std::cout << "waiting for connection..." << std::endl;
     newsockfd = accept( sockfd, (struct sockaddr *) &cli_addr, &clilen );
     if( newsockfd < 0 )
-        cerror << "ERROR on accept" << std::endl;
+        std::cerr << "ERROR on accept" << std::endl;
 
     std::cout << "connection established" << std::endl;
     bzero( buffer, 256 );
-    fcntl( newsockfd, F_SETFL, 0_NONBLOCK );
+    fcntl( newsockfd, F_SETFL, O_NONBLOCK );
 }
 
 void setupPCA()
@@ -90,7 +91,7 @@ int setupMPU()
     }
     else
     {
-        cerror << "MPU6050 connection failed" << std::endl;
+        std::cerr << "MPU6050 connection failed" << std::endl;
         return -1;
     }
 
@@ -107,7 +108,7 @@ int setupMPU()
     }
     else
     {
-        cerror << "DMP initialization failed" << std::endl;
+        std::cerr << "DMP initialization failed" << std::endl;
         return -1;
     }
     return 0;
@@ -143,14 +144,13 @@ void loop()
 
             close( newsockfd );
             close( sockfd );
-            exit;
         }
     }
 
     fifoCount = mpu.getFIFOCount();
     if( fifoCount == 1024)
     {
-        cerror << "FIFO overflow" << std::endl;
+        std::cerr << "FIFO overflow" << std::endl;
     }
     if( fifoCount >= 42 )
     {
@@ -167,7 +167,7 @@ void loop()
 int main( int argc, char* argv[] )
 {
     setup();
-    while true
+    while( true )
     {
         loop();
     }
