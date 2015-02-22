@@ -1,6 +1,6 @@
 #include <iostream>
 #include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
 #include <string.h>
 #include <unistd.h>
 #include <sys/types.h> 
@@ -10,7 +10,9 @@
 #include <sys/ioctl.h>
 #include "fcntl.h"
 
-#include "pid.h"
+
+#include "wiringPi.h"
+#include "PID.h"
 #include "PCA9685.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 
@@ -24,10 +26,17 @@ int packetSize;
 MPU6050 mpu;
 
 // servo control stuff
-#define MOTOR_MIN 200
+#define MOTOR_OFF 200
+#define MOTOR_MIN 220
 #define MOTOR_MAX 600
 #define SERVO_FREQ 60
 PCA9685 servo;
+
+// PID stuff
+#define P_GAIN 1
+#define SIN_45 0.70710678118
+PID pid;
+int throttle = (int)( ( MOTOR_MAX - MOTOR_MIN ) / 2 + MOTOR_MIN );
 
 void setupTCP( int portno )
 {
@@ -64,12 +73,16 @@ void setupTCP( int portno )
 
 void setupPCA()
 {
-    servo = PCA9685();
+    servo = PCA9685( 0x40 );
     servo.setFrequency( SERVO_FREQ );
-    servo.setPwm( 0, 0, MOTOR_MIN );
-    servo.setPwm( 1, 0, MOTOR_MIN );
-    servo.setPwm( 2, 0, MOTOR_MIN );
-    servo.setPwm( 3, 0, MOTOR_MIN );
+    servo.setPwm( 0, 0, MOTOR_OFF );
+    delay(1);
+    servo.setPwm( 1, 0, MOTOR_OFF );
+    delay(1);
+    servo.setPwm( 2, 0, MOTOR_OFF );
+    delay(1);
+    servo.setPwm( 3, 0, MOTOR_OFF );
+    delay(1);
 }
 
 /**
@@ -119,6 +132,7 @@ void setup()
     setupPCA();
     setupTCP( 51717 );
     setupMPU();
+    pid = PID( P_GAIN, 0, 0 );
 }
 
 void loop()
@@ -129,6 +143,19 @@ void loop()
     Quaternion q;
     VectorFloat gravity;
     float ypr[3];
+    
+    float modifier = 1;
+    int m0, m1, m2, m3;
+
+    // Motor layout
+    // front
+    // 3   1
+    //  \ /
+    //   X
+    //  / \
+    // 2   0
+    // CW:  0, 3
+    // CCW: 1, 2
 
     nread = read( newsockfd, buffer, 255 );
     if( nread > 0 )
@@ -137,13 +164,21 @@ void loop()
         {
             std::cout << "SHUTTING DOWN TCP SERVER" << std::endl;
 
-            servo.setPwm( 0, 0, MOTOR_MIN );
-            servo.setPwm( 1, 0, MOTOR_MIN );
-            servo.setPwm( 2, 0, MOTOR_MIN );
-            servo.setPwm( 3, 0, MOTOR_MIN );
+            servo.setPwm( 0, 0, MOTOR_OFF );
+            servo.setPwm( 1, 0, MOTOR_OFF );
+            servo.setPwm( 2, 0, MOTOR_OFF );
+            servo.setPwm( 3, 0, MOTOR_OFF );
+
+            std::cout << "\t0\t0\t0\t0" << std::endl;
 
             close( newsockfd );
             close( sockfd );
+
+            exit( EXIT_SUCCESS );
+        }
+        if( strncmp( buffer, "SET_MOTOR_", strlen( "SET_MOTOR_" ) ) == 0 )
+        {
+            throttle = atoi( buffer + 12 );
         }
     }
 
@@ -160,8 +195,28 @@ void loop()
         mpu.dmpGetYawPitchRoll( ypr, &q, &gravity );
 
         std::cout << "pitch: " << ypr[1] << std::endl;
-    }
+        modifier = pid.update( ypr[1], 0 );
 
+        m0 = (int)( ( 1 - modifier ) * throttle );
+        m1 = (int)( ( 1 + modifier ) * throttle );
+        m2 = (int)( ( 1 - modifier ) * throttle );
+        m3 = (int)( ( 1 + modifier ) * throttle );
+
+        if( m0 < MOTOR_MIN ) m0 = MOTOR_MIN;
+        if( m0 > MOTOR_MAX ) m0 = MOTOR_MAX;
+        if( m1 < MOTOR_MIN ) m1 = MOTOR_MIN;
+        if( m1 > MOTOR_MAX ) m1 = MOTOR_MAX;
+        if( m2 < MOTOR_MIN ) m2 = MOTOR_MIN;
+        if( m2 > MOTOR_MAX ) m2 = MOTOR_MAX;
+        if( m3 < MOTOR_MIN ) m3 = MOTOR_MIN;
+        if( m3 > MOTOR_MAX ) m3 = MOTOR_MAX;
+
+        std::cout << "\t" << m0 << "\t" << m1 << "\t" << m2 << "\t" << m3 << std::endl;
+        servo.setPwm( 0, 0, m0 );
+        servo.setPwm( 1, 0, m1 );
+        servo.setPwm( 2, 0, m2 );
+        servo.setPwm( 3, 0, m3 );
+    }
 }
 
 int main( int argc, char* argv[] )

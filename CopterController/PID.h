@@ -7,10 +7,10 @@
 
 #include <ctime>
 
-class pid
+class PID
 {
 public:
-    pid( double p, double i, double d );
+    PID( double p = 0, double i = 0, double d = 0 );
     
     double update( double current, double desired );
 private:

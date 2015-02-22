@@ -2,10 +2,10 @@
 * pid.cpp
 */
 
-#include "pid.h"
+#include "PID.h"
 #include <ctime>
 
-pid::pid( double p, double i, double d )
+PID::PID( double p, double i, double d )
 {
     pGain = p;
     iGain = i;
@@ -17,29 +17,30 @@ pid::pid( double p, double i, double d )
     lastUpdate = clock();
 }
 
-double pid::update( double current, double desired )
+double PID::update( double current, double desired )
 {
     double pAdjust, iAdjust, dAdjust;
     double difference;
     double posChange;
     clock_t newTime;
+    clock_t deltaT;
 
+    newTime = clock();
+    deltaT = newTime - lastUpdate;
     difference = desired - current;
 
-    // p
+    // Porportional
     pAdjust = pGain * difference;
 
-    // i
-    newTime = clock();
-    integral += difference * (newTime - lastUpdate);
+    // Integral
+    integral += difference * deltaT;
     iAdjust = -iGain * integral;
-    lastUpdate = newTime;
 
-    // d
+    // Differential
     posChange = current - lastPosition;
-    dAdjust = -dGain * posChange;
+    dAdjust = -dGain * posChange / deltaT ;
     
 
-    return pAdjust + iAdjust + dAdjust;
+    return (1 + pAdjust) * (1 + iAdjust) * (1 + dAdjust) - 1;
 }
 
