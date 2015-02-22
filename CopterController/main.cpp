@@ -35,9 +35,9 @@ MPU6050 mpu;
 PCA9685 servo;
 
 // PID stuff
-#define P_GAIN 1
+#define P_GAIN 2
 #define SIN_45 0.70710678118
-PID pid;
+PID pitchPID, rollPID, yawPID;
 int throttle = (int)( ( MOTOR_MAX - MOTOR_MIN ) / 2 + MOTOR_MIN );
 
 void setupTCP( int portno )
@@ -134,19 +134,25 @@ void setup()
     setupPCA();
     setupTCP( 51717 );
     setupMPU();
-    pid = PID( P_GAIN, 0, 0 );
+    pitchPID = PID( P_GAIN, 0, 0 );
+    rollPID = PID( P_GAIN, 0, 0 );
 }
 
 void loop()
 {
     int fifoCount;
-    int nread, nwrite;
+    int nread;
     uint8_t fifoBuffer[64];
     Quaternion q;
     VectorFloat gravity;
-    float ypr[3];
+
+    float pitchAngle;
+    float rollAngle;
+    int16_t yawRate;
     
-    float modifier = 1;
+    float pitchMod = 1;
+    float rollMod = 1;
+    float yawMod = 1;
     int m0, m1, m2, m3;
 
     // Motor layout
@@ -189,20 +195,30 @@ void loop()
     {
         std::cerr << "FIFO overflow" << std::endl;
     }
+    while( fifoCount >= 84 )
+    {
+        mpu.getFIFOBytes( fifoBuffer, packetSize );
+        fifoCount = mpu.getFIFOCount();
+    }
     if( fifoCount >= 42 )
     {
         mpu.getFIFOBytes( fifoBuffer, packetSize );
         mpu.dmpGetQuaternion( &q, fifoBuffer );
         mpu.dmpGetGravity( &gravity, &q );
-        mpu.dmpGetYawPitchRoll( ypr, &q, &gravity );
 
-        std::cout << "pitch: " << ypr[1] << std::endl;
-        modifier = pid.update( ypr[1], 0 );
+        pitchAngle = atan( gravity.x / sqrt( gravity.y * gravity.y + gravity.z * gravity.z) );
+        rollAngle = atan( gravity.y / sqrt( gravity.x * gravity.x + gravity.z * gravity.z ) );
+        yawRate = mpu.getRotationZ();
 
-        m0 = (int)( ( 1 - modifier ) * throttle );
-        m1 = (int)( ( 1 + modifier ) * throttle );
-        m2 = (int)( ( 1 - modifier ) * throttle );
-        m3 = (int)( ( 1 + modifier ) * throttle );
+        std::cout << "pitch: " << pitchAngle << "\troll: " << rollAngle << "\tyaw rate: " << yawRate << std::endl;
+        pitchMod = pitchPID.update( pitchAngle, 0 );
+        rollMod = rollPID.update( rollAngle, 0 );
+        yawMod = yawPID.update( yawRate, 0 );
+
+        m0 = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * throttle );
+        m1 = (int)( ( 1 + pitchMod ) * ( 1 - rollMod ) * throttle );
+        m2 = (int)( ( 1 - pitchMod ) * ( 1 + rollMod ) * throttle );
+        m3 = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * throttle );
 
         if( m0 < MOTOR_MIN ) m0 = MOTOR_MIN;
         if( m0 > MOTOR_MAX ) m0 = MOTOR_MAX;
