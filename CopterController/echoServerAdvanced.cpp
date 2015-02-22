@@ -1,3 +1,5 @@
+// For use with v1 GroundStation
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
