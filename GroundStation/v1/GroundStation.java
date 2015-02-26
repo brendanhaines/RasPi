@@ -262,23 +262,23 @@ class GroundStation implements ActionListener, ChangeListener, Runnable {
         motorTestValuesPanel = new JPanel();
         motorTestValuesPanel.setLayout( new FlowLayout() );
 
-        motor0Slider = new JSlider( 150, 600, 150 );
+        motor0Slider = new JSlider( 200, 600, 200 );
         motor0Slider.setOrientation( JSlider.VERTICAL );
         motor0Slider.addChangeListener( this );
 
-        motor1Slider = new JSlider( 150, 600, 150 );
+        motor1Slider = new JSlider( 200, 600, 200 );
         motor1Slider.setOrientation( JSlider.VERTICAL );
         motor1Slider.addChangeListener( this );
 
-        motor2Slider = new JSlider( 150, 600, 150 );
+        motor2Slider = new JSlider( 200, 600, 200 );
         motor2Slider.setOrientation( JSlider.VERTICAL );
         motor2Slider.addChangeListener( this );
 
-        motor3Slider = new JSlider( 150, 600, 150 );
+        motor3Slider = new JSlider( 200, 600, 200 );
         motor3Slider.setOrientation( JSlider.VERTICAL );
         motor3Slider.addChangeListener( this );
 
-        motorMasterSlider = new JSlider( 150, 600, 150 );
+        motorMasterSlider = new JSlider( 200, 600, 200 );
         motorMasterSlider.setOrientation( JSlider.VERTICAL );
         motorMasterSlider.addChangeListener( this );
 
