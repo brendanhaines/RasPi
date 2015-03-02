@@ -10,7 +10,7 @@ class Display3d extends JPanel implements ActionListener, ChangeListener {
 
     private JSlider slider;
     private MessageContent source = new MessageContent();
-    private Font normalFont = new Font( "Normal", Font.PLAIN, 15 );
+    private Font normalFont = new Font( "Normal", Font.BOLD, 15 );
 
     /**
      * no-args constructor
@@ -60,12 +60,23 @@ class Display3d extends JPanel implements ActionListener, ChangeListener {
             g.setColor( Color.GREEN );
             //g.drawLine( centerX, centerY, X, Y );
             
-            g.setColor( Color.BLACK );
+            g.setColor( Color.LIGHT_GRAY );
             g.setFont( normalFont );
-            g.drawString( "w = " + source.orientValues[ 0 ], 10, 35 );
-            g.drawString( "x = " + source.orientValues[ 1 ], 10, 60 );
-            g.drawString( "y = " + source.orientValues[ 2 ], 10, 85 );
-            g.drawString( "z = " + source.orientValues[ 3 ], 10, 110 );
+
+            double w = source.orientValues[ 0 ];
+            double x = source.orientValues[ 1 ];
+            double y = source.orientValues[ 2 ];
+            double z = source.orientValues[ 3 ];
+
+            g.drawString( "w = " + w, 11, 35 );
+            g.drawString( "x = " + x, 15, 50 );
+            g.drawString( "y = " + y, 15, 65 );
+            g.drawString( "z = " + z, 15, 80 );
+
+            double[] gravity = { 2 * ( x*z - w*y ), 2 * ( w*x + y*z ), w*w - x*x - y*y + z*z };
+
+            g.drawString( "Pitch: " + Math.toRadians( Math.atan( x / Math.sqrt( y*y + z*z ) ) ), 15, 100 );
+            g.drawString( "Roll:  " + Math.toRadians( Math.atan( y / Math.sqrt( x*x + z*z ) ) ), 15, 115 );
         }
         else {
             g.setColor( Color.RED );

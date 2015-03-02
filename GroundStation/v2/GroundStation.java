@@ -11,7 +11,7 @@ class GroundStation implements ActionListener {
     /** main window to hold everything */
     private JFrame mainWindow;
     /** window to hold emergency stop button */
-    private EStopWindow eStopWindow;
+    private EStopWindow eStopWindow = new EStopWindow( false );
 
     /** connection options section of window */
     private ConnectionPanel connectPanel;
@@ -52,6 +52,8 @@ class GroundStation implements ActionListener {
 
         mainWindow.pack();
         mainWindow.setVisible( true );
+
+        sendContent.orientation = true;
     }
 
     public void disableMotors() {

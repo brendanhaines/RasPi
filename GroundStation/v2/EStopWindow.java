@@ -20,7 +20,7 @@ class EStopWindow extends JFrame implements ActionListener {
     /**
      *
      */
-    public EStopWindow() {
+    public EStopWindow( boolean visible) {
         super("Emergency Stop");
         setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
         setAlwaysOnTop( true );
@@ -33,7 +33,14 @@ class EStopWindow extends JFrame implements ActionListener {
 
         setEnabled( true );
         pack();
-        setVisible( true );
+        setVisible( visible );
+    }
+
+    /**
+     *
+     */
+    public EStopWindow() {
+        this( true );
     }
 
     /**

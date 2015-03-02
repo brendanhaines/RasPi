@@ -137,6 +137,10 @@ class ConnectionPanel extends JPanel implements ActionListener {
             for( int i = 0; i < contentOut.controlValues.length; i++ )
                 out.print( "C" + i + "_" + contentOut.controlValues[i] + " " );
         }
+        if( contentOut.orientation ) {
+            for( int i = 0; i < contentOut.orientValues.length; i++ )
+                out.print( "O" + i + "_" + contentOut.orientValues[i] + " " );
+        }
         out.println();
     }
 
@@ -148,18 +152,43 @@ class ConnectionPanel extends JPanel implements ActionListener {
             if( in.ready() ) {
                 String messageIn = in.readLine();
                 Scanner temp = new Scanner( messageIn );
+                boolean motorsEnabled = false;
+
+                contentIn.motorTesting = false;
+                contentIn.controls = false;
+                contentIn.orientation = false;
+
                 while( temp.hasNext() ) {
                     String next = temp.next();
-                    if( next.indexOf( "H" ) == 0 ) System.out.print( "\nH" );
-                    System.out.print( next );
-                    if( next.indexOf( "M" ) > 0 ) {
-                        Scanner motorScan = new Scanner( next );
-
+                    if( next.indexOf( "H" ) == 0 ) {
+                        System.out.print( "\nH " );
+                    }
+                    else if( next.indexOf( "E" ) == 0 ) {
+                        motorsEnabled = true;
+                        System.out.print( "E " );
+                    }
+                    else if( next.indexOf( "M" ) == 0 ) {
+                        contentIn.motorTesting = true;
+                        //int motorNum = Integer.parseInt( next.substring( 1 ) );
+                        //int motorVal = Integer.parseInt( next.substring( 3, next.length() ) );
+                        //contentIn.motorValues[ motorNum ] = motorVal;
+                        System.out.print( "M " );
+                    }
+                    else if( next.indexOf( "C" ) == 0 ) {
+                        contentIn.controls = true;
+                        //int controlNum = Integer.parseInt( next.substring( 1 ) );
+                        //int controlVal = Integer.parseInt( next.substring( 3, next.length() ) );
+                        //contentIn.controlValues[ controlNum ] = controlVal;
+                        System.out.print( "C " );
+                    }
+                    else if( next.indexOf( "O" ) == 0 ) {
+                        contentIn.orientation = true;
+                        System.out.print( "O " );
                     }
                 }
+                contentIn.setMotorsEnabled( motorsEnabled );
+                contentIn.fireActionPerformed( new ActionEvent(contentIn, ActionEvent.ACTION_PERFORMED, "" ) );
             }
-            contentIn.orientation = true;
-            contentIn.fireActionPerformed( new ActionEvent(contentIn, ActionEvent.ACTION_PERFORMED, "" ) );
         }
         catch( IOException ex ) {}
     }
