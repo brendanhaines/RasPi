@@ -15,7 +15,9 @@ class Server {
 
       try {
          System.out.print( "Setting up server\n" );
-         srvr = new ServerSocket( 51717 );
+         srvr = new ServerSocket( Integer.parseInt( args[0] ) );
+         System.out.println( srvr.getInetAddress() );
+         System.out.println( srvr.getLocalPort() );
          skt = srvr.accept();
          System.out.print( "Server has connected!\n" );
 

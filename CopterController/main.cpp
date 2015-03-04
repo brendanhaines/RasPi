@@ -19,6 +19,7 @@
 #include "MPU6050_6Axis_MotionApps20.h"
 
 // TCP stuff
+#define TCP_PORT 51717
 int sockfd, newsockfd;
 char buffer[256];
 
@@ -31,11 +32,13 @@ MPU6050 mpu;
 #define MOTOR_OFF 200
 #define MOTOR_MIN 220
 #define MOTOR_MAX 600
+const int MOTOR_ON_RANGE = MOTOR_MAX - MOTOR_MIN;
 #define SERVO_FREQ 60
 PCA9685 servo;
 
 // PID stuff
 #define P_GAIN 2
+#define YAW_P_GAIN 0.0001
 #define SIN_45 0.70710678118
 PID pitchPID, rollPID, yawPID;
 int throttle = (int)( ( MOTOR_MAX - MOTOR_MIN ) / 2 + MOTOR_MIN );
@@ -76,15 +79,19 @@ void setupTCP( int portno )
 void setupPCA()
 {
     servo = PCA9685( 0x40 );
+    delay( 5 );
     servo.setFrequency( SERVO_FREQ );
+    delay( 5 );
     servo.setPwm( 0, 0, MOTOR_OFF );
-    delay(1);
     servo.setPwm( 1, 0, MOTOR_OFF );
-    delay(1);
     servo.setPwm( 2, 0, MOTOR_OFF );
-    delay(1);
     servo.setPwm( 3, 0, MOTOR_OFF );
-    delay(1);
+    delay( 500 );
+    servo.setPwm( 0, 0, MOTOR_OFF );
+    servo.setPwm( 1, 0, MOTOR_OFF );
+    servo.setPwm( 2, 0, MOTOR_OFF );
+    servo.setPwm( 3, 0, MOTOR_OFF );
+    delay( 5 );
 }
 
 /**
@@ -129,13 +136,19 @@ int setupMPU()
     return 0;
 }
 
+void setupPID()
+{
+    pitchPID = PID( P_GAIN, 0, 0 );
+    rollPID = PID( P_GAIN, 0, 0 );
+    yawPID = PID( YAW_P_GAIN, 0, 0 );
+}
+
 void setup()
 {
     setupPCA();
-    setupTCP( 51717 );
+    setupTCP( TCP_PORT );
     setupMPU();
-    pitchPID = PID( P_GAIN, 0, 0 );
-    rollPID = PID( P_GAIN, 0, 0 );
+    setupPID();
 }
 
 void loop()
@@ -215,10 +228,12 @@ void loop()
         rollMod = rollPID.update( rollAngle, 0 );
         yawMod = yawPID.update( yawRate, 0 );
 
-        m0 = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * throttle );
-        m1 = (int)( ( 1 + pitchMod ) * ( 1 - rollMod ) * throttle );
-        m2 = (int)( ( 1 - pitchMod ) * ( 1 + rollMod ) * throttle );
-        m3 = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * throttle );
+        std::cout << "\t" << pitchMod << "\t" << rollMod << "\t" << yawMod;
+
+        m0 = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * ( 1 + yawMod ) * throttle );
+        m1 = (int)( ( 1 + pitchMod ) * ( 1 - rollMod ) * ( 1 - yawMod ) * throttle );
+        m2 = (int)( ( 1 - pitchMod ) * ( 1 + rollMod ) * ( 1 - yawMod ) * throttle );
+        m3 = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * ( 1 + yawMod ) * throttle );
 
         if( m0 < MOTOR_MIN ) m0 = MOTOR_MIN;
         if( m0 > MOTOR_MAX ) m0 = MOTOR_MAX;

@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -76,7 +76,7 @@ int main( int argc, char* argv[] )
         {
             //printf( "ERROR on read" );
         }
-        else if( nread != 0 )
+        else if( nread > 0 )
         {
             nwrite = write( newsockfd, buffer, strlen(buffer) );
             if( nwrite < 0 )
@@ -116,6 +116,8 @@ int main( int argc, char* argv[] )
                     printf( "motor %d set to %d\n", motor, speed );
                 }
             }
+            bzero( buffer, 256 );
+            nread  = 0;
         }
         delay(5);
     }
