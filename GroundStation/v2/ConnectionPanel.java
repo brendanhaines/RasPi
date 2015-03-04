@@ -108,6 +108,7 @@ class ConnectionPanel extends JPanel implements ActionListener {
      */
     public void disconnectTcp( boolean reconnect ) {
         out.print( "DISCONNECT" );
+        out.print( "D" );
         if( reconnect ) out.print( "_R" );
         out.println();
 
@@ -131,16 +132,19 @@ class ConnectionPanel extends JPanel implements ActionListener {
         if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors
         if( contentOut.motorTesting ) {
             for( int i = 0; i < contentOut.motorValues.length; i++ )
-                out.print( "M" + i + "_" + contentOut.motorValues[i] + " " );
+                out.printf( "M%2d_%4d ", i, contentOut.motorValues[i] );
         }
+        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
         if( contentOut.controls ) {
             for( int i = 0; i < contentOut.controlValues.length; i++ )
-                out.print( "C" + i + "_" + contentOut.controlValues[i] + " " );
+                out.printf( "C%2d_%4d ", i, contentOut.controlValues[i] );
         }
+        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
         if( contentOut.orientation ) {
             for( int i = 0; i < contentOut.orientValues.length; i++ )
                 out.print( "O" + i + "_" + contentOut.orientValues[i] + " " );
         }
+        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
         out.println();
     }
 
@@ -227,7 +231,7 @@ class ConnectionPanel extends JPanel implements ActionListener {
                 connectTcp( hostAddr.getText(), Integer.parseInt( hostPort.getText() ) );
             }
         }
-        else {
+        else if( connectButton.getText().equals("disconnect") ){
             sendTCP();
             readTCP();
         }

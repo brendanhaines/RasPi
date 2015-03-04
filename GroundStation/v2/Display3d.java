@@ -33,8 +33,8 @@ class Display3d extends JPanel implements ActionListener, ChangeListener {
         setLayout( new BorderLayout() );
         slider = new JSlider();
         slider.setOrientation( JSlider.VERTICAL );
-        slider.addChangeListener( this );
-        add( slider, BorderLayout.EAST );
+        //slider.addChangeListener( this );
+        //add( slider, BorderLayout.EAST );
     }
 
     /**

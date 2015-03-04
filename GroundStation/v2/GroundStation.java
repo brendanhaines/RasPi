@@ -20,8 +20,11 @@ class GroundStation implements ActionListener {
     private JTabbedPane tabbedPane;
     /** motor testing panel */
     private MotorTestPanel motorTestPanel;
-    /** */
+    /** displays visual representation of copter orientation */
     private Display3d orientationPanel;
+    /** displays visual representation of control positions */
+    private DisplayController controllerPanel;
+
     /** outgoing message content options */
     public MessageContent sendContent = new MessageContent();
     /** incoming message content */
@@ -29,7 +32,7 @@ class GroundStation implements ActionListener {
     
     public GroundStation() {
         mainWindow = new JFrame( "PiCopter Ground Station" );
-        mainWindow.setResizable( true );
+        mainWindow.setResizable( false );
         mainWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         mainWindow.getContentPane().setLayout( new BoxLayout( mainWindow.getContentPane(), BoxLayout.PAGE_AXIS ) );
 
@@ -39,6 +42,9 @@ class GroundStation implements ActionListener {
 
         tabbedPane = new JTabbedPane();
         mainWindow.getContentPane().add( tabbedPane );
+
+        controllerPanel = new DisplayController( receiveContent );
+        tabbedPane.add( controllerPanel, "Controller" );
 
         orientationPanel = new Display3d( receiveContent );
         tabbedPane.add( orientationPanel, "Orientation" );
