@@ -8,3 +8,4 @@ sudo modprobe i2c-dev
 sudo modprobe i2c-bcm2708
 sleep 0.1
 sudo chmod 666 /dev/i2c-0
+sudo chmod 666 /dev/i2c-1
