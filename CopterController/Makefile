@@ -15,10 +15,13 @@ PCA9685tester.o echoServerAdvanced.o main.o: $(HDRS)
 v2Parser.o: v2Parser.h helper_3dmath.h
 DSM2.o: $(DSM_HDRS)
 PID.o: $(PID_HDRS)
-v2main.o: v2Parser.h $(PCA_HDRS) $(MPU_HDRS) $(PID_HDRS)
 
+v2main.o: v2Parser.h $(PCA_HDRS) $(MPU_HDRS) $(PID_HDRS)
 v2main: v2main.o v2Parser.o PCA9685.o PID.o I2Cdev.o MPU6050.o DSM2.o
 	$(CXX) $^ -lwiringPi -o $@
+
+v2EchoServer: v2EchoServer.cpp
+	$(CXX) $^ -o $@
 
 main: main.o PID.o PCA9685.o I2Cdev.o MPU6050.o
 	$(CXX) $^ -lwiringPi -o $@
