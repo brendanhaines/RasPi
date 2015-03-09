@@ -40,6 +40,9 @@ class GroundStation implements ActionListener {
         connectPanel.setEnabled( true );
         mainWindow.getContentPane().add( connectPanel );
 
+        JButton fcButton = new JButton( "arm" );
+        mainWindow.getContentPane().add( fcButton );
+
         tabbedPane = new JTabbedPane();
         mainWindow.getContentPane().add( tabbedPane );
 

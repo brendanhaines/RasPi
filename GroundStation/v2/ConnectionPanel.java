@@ -107,12 +107,13 @@ class ConnectionPanel extends JPanel implements ActionListener {
      * @param reconnect - tells server whether to listen for new connections. If false, server will shut down
      */
     public void disconnectTcp( boolean reconnect ) {
-        out.print( "DISCONNECT" );
+        out.print( "DISCONNECT " );
         out.print( "D" );
         if( reconnect ) out.print( "_R" );
         out.println();
 
         try {
+            tcpTimer.stop();
             in.close();
             out.close();
             tcpSocket.close();
@@ -131,20 +132,21 @@ class ConnectionPanel extends JPanel implements ActionListener {
         out.print( "H " );   // Heartbeat / begin message indicator
         if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors
         if( contentOut.motorTesting ) {
-            for( int i = 0; i < contentOut.motorValues.length; i++ )
-                out.printf( "M%2d_%4d ", i, contentOut.motorValues[i] );
+            for( int i = 0; i < contentOut.motorValues.length; i++ ) {
+                out.printf( "M%02d_%04d ", i, contentOut.motorValues[i] );
+                if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
+            }
         }
-        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
         if( contentOut.controls ) {
-            for( int i = 0; i < contentOut.controlValues.length; i++ )
-                out.printf( "C%2d_%4d ", i, contentOut.controlValues[i] );
+            for( int i = 0; i < contentOut.controlValues.length; i++ ) {
+                out.printf( "C%02d_%04d ", i, contentOut.controlValues[i] );
+                if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
+            }
         }
-        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
-        if( contentOut.orientation ) {
+        /*if( contentOut.orientation ) {
             for( int i = 0; i < contentOut.orientValues.length; i++ )
                 out.print( "O" + i + "_" + contentOut.orientValues[i] + " " );
-        }
-        if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
+        }*/
         out.println();
     }
 
