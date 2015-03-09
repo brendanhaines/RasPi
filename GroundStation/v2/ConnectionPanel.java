@@ -143,10 +143,6 @@ class ConnectionPanel extends JPanel implements ActionListener {
                 if( contentOut.getMotorsEnabled() ) out.print( "E " );  // enable motors (redundant)
             }
         }
-        /*if( contentOut.orientation ) {
-            for( int i = 0; i < contentOut.orientValues.length; i++ )
-                out.print( "O" + i + "_" + contentOut.orientValues[i] + " " );
-        }*/
         out.println();
     }
 

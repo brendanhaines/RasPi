@@ -79,10 +79,10 @@ class MotorTestPanel extends JPanel implements ActionListener {
      *
      */
     public void setEnabled( boolean state ) {
+        checkBox.setEnabled( state );
         if( !state ) {
             setTestStatus( false );
         }
-        checkBox.setEnabled( state );
     }
 
     /**
@@ -90,7 +90,7 @@ class MotorTestPanel extends JPanel implements ActionListener {
      */
     public void setTestStatus( boolean enable ) {
         checkBox.setSelected( enable );
-        controlOutput.setMotorsEnabled( enable );
+        if( checkBox.isEnabled() ) controlOutput.setMotorsEnabled( enable );
         controlOutput.motorTesting = enable;
         if( !enable ) {
             masterSlider.setValue( 0 );
@@ -132,17 +132,18 @@ class MotorTestPanel extends JPanel implements ActionListener {
             }
             return;
         }
-        if( evt.getSource() == checkBox ) {
+        else if( evt.getSource() == checkBox ) {
             setTestStatus( checkBox.isSelected() );
             return;
         }
-        if( evt.getSource() == masterSlider ) {
+        else if( evt.getSource() == masterSlider ) {
             slider0.setValue( Integer.parseInt( evt.getActionCommand() ) );
             slider1.setValue( Integer.parseInt( evt.getActionCommand() ) );
             slider2.setValue( Integer.parseInt( evt.getActionCommand() ) );
             slider3.setValue( Integer.parseInt( evt.getActionCommand() ) );
         }
-        fireActionPerformed();
+
+        if( evt.getSource() != controlOutput ) fireActionPerformed();
     }
 
     ////////////////////////////////////////////

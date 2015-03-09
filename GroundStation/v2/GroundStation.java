@@ -16,6 +16,9 @@ class GroundStation implements ActionListener {
     /** connection options section of window */
     private ConnectionPanel connectPanel;
 
+    /** flight controller arm/disarm button*/
+    private ArmButton arm;
+
     /** tabbed pane to hold stuff */
     private JTabbedPane tabbedPane;
     /** motor testing panel */
@@ -40,8 +43,9 @@ class GroundStation implements ActionListener {
         connectPanel.setEnabled( true );
         mainWindow.getContentPane().add( connectPanel );
 
-        JButton fcButton = new JButton( "arm" );
-        mainWindow.getContentPane().add( fcButton );
+        arm = new ArmButton( sendContent );
+        arm.setEnabled( false );
+        mainWindow.getContentPane().add( arm );
 
         tabbedPane = new JTabbedPane();
         mainWindow.getContentPane().add( tabbedPane );
@@ -67,11 +71,23 @@ class GroundStation implements ActionListener {
 
     public void disableMotors() {
         connectPanel.setEnabled( true );
+
+        arm.setEnabled( true );
+        motorTestPanel.setEnabled( true );
+
         eStopWindow.dispose();
     }
 
     public void enableMotors() {
         connectPanel.setEnabled( false );
+
+        if( motorTestPanel.getTestStatus() ) {
+            arm.setEnabled( false );
+        }
+        else {
+            motorTestPanel.setEnabled( false );
+        }
+
         eStopWindow = new EStopWindow();
         eStopWindow.addActionListener( this );
     }
@@ -79,15 +95,18 @@ class GroundStation implements ActionListener {
     public void actionPerformed( ActionEvent evt ) {
         if( evt.getSource() == eStopWindow ) {
             sendContent.setMotorsEnabled( false );
+            arm.setText( "Arm Flight Controller" );
         }
         if( evt.getSource() == connectPanel ) {
             if( evt.getActionCommand().equals( "CONNECT" ) ) {
                 mainWindow.setDefaultCloseOperation( JFrame.DO_NOTHING_ON_CLOSE );
                 motorTestPanel.setEnabled( true );
+                arm.setEnabled( true );
             }
             else if( evt.getActionCommand().equals( "DISCONNECT" ) ) {
                 mainWindow.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
                 motorTestPanel.setEnabled( false );
+                arm.setEnabled( false );
             }
         }
         else if( evt.getActionCommand().equals( "ENABLE_MOTORS" ) ) {
