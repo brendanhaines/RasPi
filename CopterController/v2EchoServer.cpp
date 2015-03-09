@@ -1,5 +1,7 @@
 #include <iostream>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -11,7 +13,7 @@
 using namespace std;
 
 // TCP vars
-#define TCP_PORT 51718
+#define TCP_PORT 51717
 int sockfd, newsockfd;
 char buffer[ 256 ];
 struct sockaddr_in serv_addr, cli_addr;
