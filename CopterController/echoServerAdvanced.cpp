@@ -99,7 +99,7 @@ int main( int argc, char* argv[] )
             else if( strncmp( buffer, "SET_MOTOR_", strlen("SET_MOTOR_") ) == 0 )
             {
                 int motor = atoi( buffer + 10 );
-                int speed = atoi( buffer + 12 );
+                int speed = atoi( buffer + 13 );
                 if( speed < MOTOR_MIN )
                 {
                     speed = MOTOR_MIN;
