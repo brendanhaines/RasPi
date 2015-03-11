@@ -53,7 +53,7 @@ iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
 # save these settings
 sh -c "iptables-save > /etc/iptables.ipv4.nat"
 
-# modify /etc/network/interfaces
+# modify /etc/network/interfaces (again)
 cat "up iptables-restore < /etc/iptables.ipv4.nat" >> /etc/network/interfaces
 
 # update hostapd
