@@ -23,8 +23,6 @@ class GroundStation implements ActionListener {
     private JTabbedPane tabbedPane;
     /** motor testing panel */
     private MotorTestPanel motorTestPanel;
-    /** displays visual representation of copter orientation */
-    private Display3d orientationPanel;
     /** displays visual representation of control positions */
     private DisplayController controllerPanel;
 
@@ -52,9 +50,7 @@ class GroundStation implements ActionListener {
 
         controllerPanel = new DisplayController( receiveContent );
         tabbedPane.add( controllerPanel, "Controller" );
-
-        orientationPanel = new Display3d( receiveContent );
-        tabbedPane.add( orientationPanel, "Orientation" );
+        connectPanel.addActionListener( controllerPanel );
 
         motorTestPanel = new MotorTestPanel( sendContent );
         motorTestPanel.setEnabled( false );
@@ -65,8 +61,6 @@ class GroundStation implements ActionListener {
 
         mainWindow.pack();
         mainWindow.setVisible( true );
-
-        sendContent.orientation = true;
     }
 
     public void disableMotors() {
