@@ -7,8 +7,8 @@ class DisplayController extends JPanel implements ActionListener {
     private MessageContent source = new MessageContent();
     private Font normalFont = new Font( "Normal", Font.BOLD, 15 );
 
-    private int chanMax;
-    private int chanMin;
+    private int chanMax = 900;
+    private int chanMin = 100;
 
     public DisplayController() {
         setBackground( Color.DARK_GRAY );
