@@ -10,9 +10,7 @@
 #include "wiringPiI2C.h"
 
 PCA9685::PCA9685()
-{
-    PCA9685( PCA9685_DEFAULT_ADDRESS );
-}
+{}
 
 PCA9685::PCA9685( int devAddr )
 {

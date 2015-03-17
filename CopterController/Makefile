@@ -1,4 +1,6 @@
-all: PID.o I2Cdev.o MPU6050.o PCA9685.o DSM2.o PID.o
+all: libraries oneThatWorks
+
+libraries: PID.o I2Cdev.o MPU6050.o PCA9685.o DSM2.o PID.o v2Parser.o
 
 PCA_HDRS = PCA9685.h PCA9685_Addresses.h
 MPU_HDRS = helper_3dmath.h I2Cdev.h MPU6050_6Axis_MotionApps20.h MPU6050.h
@@ -36,6 +38,10 @@ echoServerAdvanced: echoServerAdvanced.o PCA9685.o
 
 SatelliteReceiver.o SatelliteReceiverTest.o: SatelliteReceiver.h
 SatelliteReceiverTest: SatelliteReceiver.o SatelliteReceiverTest.o
+	$(CXX) $^ -lwiringPi -o $@
+
+oneThatWorks.o: $(PCA_HDRS) $(MPU_HDRS) $(DSM_HDRS) $(PID_HDRS)
+oneThatWorks: oneThatWorks.o PID.o I2Cdev.o MPU6050.o PCA9685.o DSM2.o PID.o
 	$(CXX) $^ -lwiringPi -o $@
 
 clean:

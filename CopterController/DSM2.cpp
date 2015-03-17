@@ -28,6 +28,10 @@ void DSM2::update()
 
     if( serialDataAvail(fd) < 16 ) return;
 
+    while( serialDataAvail(fd) > 32 )
+        for( i = 0; i < 16; i++ )
+            serialGetchar(fd);
+
     for( i = 0; i < 8; i++ )
         data[ i ] = ( (int)(serialGetchar(fd)) << 8 ) + serialGetchar(fd);
 
