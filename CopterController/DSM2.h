@@ -4,7 +4,7 @@
 class DSM2
 {
 public:
-    DSM2( int mode = 1024 );
+    DSM2();
 
     void update();
     int values[7];

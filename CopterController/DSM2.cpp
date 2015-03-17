@@ -5,14 +5,21 @@
 
 #define VALUE_MASK 0x3FF
 
-DSM2::DSM2( int mode )
+DSM2::DSM2()
 {
     std::cout << "opening serial port..." << std::flush;
     fd = serialOpen( "/dev/ttyAMA0", 115200 );
-    std::cout << "SUCCESS " << fd << std::endl;
+    if( fd < 0 )
+    {
+        std::cout << "FAILURE" << std::endl;
+    }
+    else
+    {
+        std::cout << "SUCCESS " << fd << std::endl;
+    }
     std::cout << "flushing serial..." << std::flush;
     serialFlush(fd);
-    std::cout << "SUCCESS" << std::endl;
+    std::cout << "DONE" << std::endl;
 }
 
 void DSM2::update()
