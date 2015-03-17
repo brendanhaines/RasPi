@@ -23,7 +23,7 @@ PCA9685::PCA9685( int devAddr )
     }
 
     setAllPwm( 0, 0 );
-    std::cout << "all pwm set to o" << std::endl;
+    std::cout << "all pwm set to 0" << std::endl;
 
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE2, PCA9685_OUTDRV );
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE1, PCA9685_ALLCALL );
