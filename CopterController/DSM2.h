@@ -7,12 +7,13 @@ public:
     DSM2();
 
     void update();
-    int values[7];
+    int values[6];
 private:
     int fd;
     int valueMask;
     char thisByte, lastByte;
-    int data[7];
+    int data[8];
+    char raw[16];
 };
 
 #endif
