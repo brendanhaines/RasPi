@@ -30,8 +30,8 @@ double yawP     = 0.0001;
 double yawI     = 0;
 double yawD     = 0;
 
-v2Parser tcp;
 PCA9685 pca;
+v2Parser tcp;
 DSM2 dsm;
 MPU6050 mpu;
 
@@ -46,62 +46,62 @@ void setAllMotorsOff()
 {
     int i;
     for( i = 0; i < 16; i++ )
-        pca.setPwm( i, 0, 0 );
+        pca.setPwm( i, 0, MOTOR_OFF );
 }
 
 void setup( int tcpPort )
 {
-    cout << "setting up PCA9685 (motor controller)..." << endl;
+    cout << "\nsetting up PCA9685 (motor controller)..." << endl;
         pca = PCA9685( 0x40 );
         pca.setFrequency( 60 );
         setAllMotorsOff();
         delay( 250 );
         setAllMotorsOff();
         cout << "motors set to " << MOTOR_OFF << " (OFF)" << endl;
-    cout << "PCA9685 set up" << endl;
+    cout << "PCA9685 set up\n" << endl;
 
     cout << "setting up TCP link..." << endl;
         tcp = v2Parser( tcpPort );
     cout << "TCP set up" << endl;
 
-    cout << "setting up RC receiver..." << endl;
+    /*cout << "setting up RC receiver..." << endl;
         dsm = DSM2();
-        dsm.values = tcp.controlValues;
-    cout << "RC receiver set up" << endl;
+        //dsm.values = tcp.controlValues;
+    cout << "RC receiver set up" << endl;*/
 
-    cout << "setting up MPU6050..." << endl;
-        cout << "\tinitializing MPU6050..." << endl;
-        mpu.initialize();
-        cout << "\ttesting MPU6050 connection..." << flush;
-        if( mpu.testConnection() )
-        {
-            cout << "SUCCESS" << endl;
-        }
-        else
-        {
-            cout << "FAILURE" << endl;
-            exit( EXIT_FAILURE );
-        }
-        cout << "\tinitializing DMP..." << flush;
-        if( mpu.dmpInitialize() == 0 )
-        {
-            cout << "\tSUCCESS" << endl;
-            cout << "\tEnabling DMP..." << endl;
-            mpu.setDMPEnabled( true );
-            fifoPacketSize = mpu.dmpGetFIFOPacketSize();
-        }
-        else
-        {
-            cout << "\tFAILURE" << endl;
-            exit( EXIT_FAILURE );
-        }
+    cout << "\nsetting up MPU6050..." << endl;
+    cout << "initializing MPU6050..." << endl;
+    mpu.initialize();
+    cout << "testing MPU6050 connection..." << flush;
+    if( mpu.testConnection() )
+    {
+        cout << "SUCCESS" << endl;
+    }
+    else
+    {
+        cout << "FAILURE" << endl;
+        exit( EXIT_FAILURE );
+    }
+    cout << "initializing DMP..." << flush;
+    if( mpu.dmpInitialize() == 0 )
+    {
+        cout << "SUCCESS" << endl;
+        cout << "Enabling DMP..." << endl;
+        mpu.setDMPEnabled( true );
+        fifoPacketSize = mpu.dmpGetFIFOPacketSize();
+    }
+    else
+    {
+        cout << "FAILURE" << endl;
+        exit( EXIT_FAILURE );
+    }
     cout << "MPU6050 set up" << endl;
 
-    cout << "setting up PID..." << endl;
+    cout << "\nsetting up PID..." << endl;
         pitchPID = PID( pitchP, pitchI, pitchD );
         rollPID = PID( rollP, rollI, rollD );
         yawPID = PID( yawP, yawI, yawD );
-    cout << "PID set up" << endl;
+    cout << "PID set up\n" << endl;
 
     atexit( setAllMotorsOff );
 }
@@ -154,22 +154,18 @@ int main( int argc, char* argv[] )
     float rollMod = 1;
     float yawMod = 1;
 
-    if( argc < 1 )
-    {
-        setup( DEFAULT_TCP_PORT );
-    }
-    else
-    {
-        setup( *argv[0] );
-    }
+    setup( DEFAULT_TCP_PORT );
 
-    //dsm.sync();
+    cout << "starting loop" << endl;
     while( true )
     {
-        //dsm.update();
-        tcp.send();
-        tcp.recieve();
-        if( updateMpu() )
+        dsm.update();
+        cout << "dsm rx: " << dsm.values[0] << "\t" << dsm.values[1] << "\t" << dsm.values[2] << "\t" << dsm.values[3] << "\t" << dsm.values[4] << "\t" << dsm.values[5] << "\t" << endl;
+        //tcp.send();
+        //cout << "tcp send done" << endl;
+        //cout<< tcp.recieve() <<endl;
+        //cout << "tcp receive done" << endl;
+        /*if( updateMpu() )
         {
             pitchAngle = atan( gravity.x / sqrt( gravity.y * gravity.y + gravity.z * gravity.z) );
             rollAngle = atan( gravity.y / sqrt( gravity.x * gravity.x + gravity.z * gravity.z ) );
@@ -201,7 +197,12 @@ int main( int argc, char* argv[] )
             {
                 setAllMotorsOff();
             }
+            cout << "MPU data read" << endl;
         }
+        else
+        {
+            cout << "no MPU data avail" << endl;
+        }*/
     }
 }
 

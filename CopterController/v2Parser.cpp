@@ -18,6 +18,10 @@
 
 using namespace std;
 
+// No-Args constructor
+v2Parser::v2Parser()
+{}
+
 v2Parser::v2Parser( int port )
 {
     setup( port );
@@ -98,14 +102,14 @@ bool v2Parser::recieve()
                 cout << "M" << channel << endl;
                 carotPos += strlen("Mxx_xxxx ");
             }
-            else if( strncmp( buffer + carotPos, "C", strlen("C") ) == 0 && strlen("Cxx_xxxx") + carotPos <= n )
+            /*else if( strncmp( buffer + carotPos, "C", strlen("C") ) == 0 && strlen("Cxx_xxxx") + carotPos <= n )
             {
                 channel = atoi( buffer + carotPos + 1 );
                 value = atoi( buffer + carotPos + 4 );
                 motorValues[ channel ] = value;
                 cout << "C" << channel << endl;
                 carotPos += strlen("Cxx_xxxx ");
-            }
+            }*/
             else carotPos++;
         }
         cout << endl;

@@ -12,7 +12,8 @@
 class v2Parser
 {
 public:
-    v2Parser( int port = 51717 );
+    v2Parser();
+    v2Parser( int port);
     bool setup( int portNum );
     bool recieve();
     void send();
