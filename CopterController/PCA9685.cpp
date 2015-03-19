@@ -14,15 +14,19 @@ PCA9685::PCA9685()
 
 PCA9685::PCA9685( int devAddr )
 {
+    std::cout << "[ .... ] Getting I2C file handle..." << std::flush;
     i2cFileHandle = wiringPiI2CSetup( devAddr );  // parameter is dependent on board revision
     if( i2cFileHandle < 0 )
     {
-        std::cerr << "failed to open i2c" << std::endl;
+        std::cout << "\r[ FAIL ]" << std::endl;
     }
 
+    std::cout << " Setting all pwm to 0..." << std::flush;
     setAllPwm( 0, 0 );
-    std::cout << "all pwm set to 0" << std::endl;
+    std::cout << "\r[ DONE ] " << std::endl;
 
+
+    std::cout << "[ .... ] Setting up PCA9685..." << std::flush;
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE2, PCA9685_OUTDRV );
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE1, PCA9685_ALLCALL );
     delay( 5 );
@@ -31,6 +35,7 @@ PCA9685::PCA9685( int devAddr )
     mode1 = mode1 & ~PCA9685_SLEEP; // set sleep bit (to wake)
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE1, mode1 );
     delay( 5 );
+    std::cout << "\r[ DONE ]" << std::endl;
 }
 
 void PCA9685::setFrequency( int hertz )
@@ -43,10 +48,10 @@ void PCA9685::setFrequency( int hertz )
     preScale /= hertz;
     preScale -= 1;  // fencepost
 
-    std::cout << "setting pwm frequency to: " << hertz << " hertz" << std::endl;
-    std::cout << "estimate preScale: " << preScale << std::endl;
+    std::cout << "[ .... ] setting pwm frequency to: " << hertz << "..." << std::flush;
+    std::cout << " estimate preScale: " << preScale << std::flush;
     preScale += 0.5;
-    std::cout << "final preScale: " << (int) preScale << std::endl;
+    std::cout << " final preScale: " << (int) preScale << std::flush;
 
     oldMode = wiringPiI2CReadReg8( i2cFileHandle, PCA9685_MODE1 );
     newMode = ( oldMode & 0x7F ) | PCA9685_SLEEP;   // set sleep bit (to sleep)
@@ -56,6 +61,7 @@ void PCA9685::setFrequency( int hertz )
     delay( 5 );
     wiringPiI2CWriteReg8( i2cFileHandle, PCA9685_MODE1, oldMode | PCA9685_RESTART );   // set restart bit
     delay( 5 ); // wait for restart
+    std::cout << "\r[ DONE ]" << std::endl;
 }
 
 void PCA9685::setPwm( int channel, int on, int off )

@@ -7,9 +7,6 @@ class DisplayController extends JPanel implements ActionListener {
     private MessageContent source = new MessageContent();
     private Font normalFont = new Font( "Normal", Font.BOLD, 15 );
 
-    private int chanMax = 900;
-    private int chanMin = 100;
-
     public DisplayController() {
         setBackground( Color.DARK_GRAY );
         setPreferredSize( new Dimension( 0, 100 ) );
@@ -23,9 +20,9 @@ class DisplayController extends JPanel implements ActionListener {
     /**
      *
      */
-    private int scaleChan( int chan, int range ) {
+    /*private int scaleChan( int chan, int range ) {
         return (int)(range * ( ( (double)(chan - chanMin) / (chanMax - chanMin)  ) - 0.5 ));
-    }
+    }*/
 
     public void paintComponent( Graphics g ) {
         super.paintComponent( g );
@@ -47,14 +44,14 @@ class DisplayController extends JPanel implements ActionListener {
         g.setColor( Color.RED );
         // left stick
         g.fillOval(
-            scaleChan( source.controlValues[ 3 ], boxSide ) - circleRad + boxSide * 3/4,
-            scaleChan( source.controlValues[ 0 ], boxSide ) - circleRad + boxSide * 3/4,
+            source.controlValues[ 3 ] * boxSide / 1000 - circleRad + boxSide * 1/4,
+            source.controlValues[ 0 ] * boxSide / 1000 - circleRad + boxSide * 11/4,
             circleDiam,
             circleDiam );
         // right stick
         g.fillOval(
-            scaleChan( source.controlValues[ 1 ], boxSide ) - circleRad + boxSide * 9/4,
-            scaleChan( source.controlValues[ 2 ], boxSide ) - circleRad + boxSide * 3/4,
+            source.controlValues[ 1 ] * boxSide / 1000 - circleRad + boxSide * 7/4,
+            source.controlValues[ 2 ] * boxSide / 1000 - circleRad + boxSide * 11/4,
             circleDiam,
             circleDiam );
 

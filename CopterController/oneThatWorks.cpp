@@ -3,7 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <unistd.h>
-//#include <stdint.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -14,7 +13,6 @@
 #include "PCA9685.h"
 #include "DSM2.h"
 #include "PID.h"
-//#include "I2Cdev.h"
 #include "MPU6050_6Axis_MotionApps20.h"
 #include "wiringPi.h"
 
@@ -53,11 +51,14 @@ PCA9685 pca;
 #define MOTOR_MAX 600
 
 int motorValues[4];
+int controlValues[6];   // scaled 0 to 1000. 500 is centered
 bool motorsEnabled;
 bool motorTesting;
 int throttle = 300;
 
 // PID stuff
+#define PITCH_GAIN 0.785398163397448
+#define ROLL_GAIN  0.785398163397448
 PID pitch, roll, yaw;
 double pitchP   = 2;
 double pitchI   = 0;
@@ -75,12 +76,13 @@ bool setupTCP( int portNum )
     struct sockaddr_in serv_addr, cli_addr;
     socklen_t clilen;
 
-    cout << "setting up TCP..." << endl;
+    cout << "[ .... ] setting up TCP..." << flush;
 
     sockfd = socket( AF_INET, SOCK_STREAM, 0 );
     if( sockfd < 0 )
     {
-        cerr << "ERROR opening socket" << endl;
+        cout << "\r[ FAIL ]" << endl;
+        cerr << "** ERROR opening socket " << portNum << endl;
         return false;
     }
 
@@ -89,21 +91,24 @@ bool setupTCP( int portNum )
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portNum);
 
-    cout << "binding socket to port " << portNum << endl;
+    //cout << "binding socket to port " << portNum << endl;
+    cout << " port: " << portNum << flush;
     if( bind( sockfd, (struct sockaddr*) &serv_addr, sizeof(serv_addr) ) )
     {
+        cout << "\r[ FAIL ]" << endl;
         cerr << "ERROR binding socket to port " << portNum << endl;
         return false;
     }
 
-    cout << "listening to socket" << endl;
+    //cout << "listening to socket" << endl;
     listen( sockfd, 5 );
     clilen = sizeof( cli_addr );
     
-    cout << "waiting for connection" << endl;
+    cout << " WAITING FOR CONNECTION..." << flush;
     newsockfd = accept( sockfd, (struct sockaddr *) &cli_addr, &clilen );
     if( newsockfd < 0 )
     {
+        cout << "\r[ FAIL ]" << endl;
         cerr << "ERROR on accept" << endl;
         return false;
     }
@@ -111,7 +116,7 @@ bool setupTCP( int portNum )
     bzero( buffer, 256 );
     fcntl( newsockfd, F_SETFL, O_NONBLOCK );
     
-    cout << "connection established" << endl;
+    cout << "\r[ DONE ]" << endl;
     return true;
 }
 
@@ -130,7 +135,7 @@ void setupPCA()
 void setupMPU()
 {
     mpu = MPU6050();
-    cout << "\nsetting up MPU6050..." << endl;
+    cout << "setting up MPU6050..." << endl;
     cout << "initializing MPU6050..." << endl;
     mpu.initialize();
     cout << "testing MPU6050 connection..." << flush;
@@ -216,6 +221,40 @@ void readTCP()
     return;
 }
 
+// returns the number of characters written
+int writeTCP()
+{
+    int i, n = 0;
+    char writeBuffer[256];
+    //char temp[32];
+    strcat( writeBuffer, "H " );
+
+    if( motorsEnabled )
+    {
+        for( i = 0; i < 4; i++ )
+        {
+            //sprintf( temp, "E M%02d_%04d ", i, motorValues[i] );
+            //strcat( writeBuffer, temp );
+            //bzero( temp, 32 );
+            fprintf( fdopen(newsockfd, "a"), "E M%02d_%04d ", i, motorValues[i] );
+            printf( "E M%02d_%04d ", i, motorValues[i] );
+        }
+    }
+
+    for( i = 0; i < 6; i++ )
+    {
+        //sprintf( temp, "C%02d_%04d ", i, controlValues[i] );
+        //strcat( writeBuffer, temp );
+        //bzero( temp, 32 );
+        fprintf( fdopen(newsockfd, "a"), "C%02d_%04d ", i, controlValues[i] );
+        printf( "C%02d_%04d ", i, controlValues[i] );
+    }
+
+    //n = write( newsockfd, writeBuffer, strlen(writeBuffer) );
+    //printf( writeBuffer );
+    return n;
+}
+
 bool updateMPU()
 {
     fifoCount = mpu.getFIFOCount();
@@ -244,18 +283,35 @@ bool updateMPU()
     return false;
 }
 
+void scaleRxValues()
+{
+    int i;
+    for( i = 0; i< 6; i++ )
+        controlValues[i] = ( dsm.values[i] - RX_MIN[i] ) * 1000 / ( RX_MAX[i] - RX_MIN[i] );
+}
+
+int toMotorRange( int control )
+{
+    return control * (MOTOR_MAX - MOTOR_MIN) / 1000 + MOTOR_MIN;
+}
+
 void updatePID()
 {
     float pitchMod, rollMod, yawMod;
 
-    pitchMod = pitch.update( pitchAngle, 0 );
-    rollMod = roll.update( rollAngle, 0 );
+    pitchMod = pitch.update( pitchAngle, (float)( controlValues[2] - 500 ) * -PITCH_GAIN / 1000 );
+    rollMod = roll.update( rollAngle, (float)( controlValues[1] - 500 ) * ROLL_GAIN / 1000 );
     yawMod = yaw.update( yawRate, 0 );
 
-    motorValues[0] = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * ( 1 + yawMod ) * throttle );
+    /*motorValues[0] = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * ( 1 + yawMod ) * throttle );
     motorValues[1] = (int)( ( 1 + pitchMod ) * ( 1 - rollMod ) * ( 1 - yawMod ) * throttle );
     motorValues[2] = (int)( ( 1 - pitchMod ) * ( 1 + rollMod ) * ( 1 - yawMod ) * throttle );
-    motorValues[3] = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * ( 1 + yawMod ) * throttle );
+    motorValues[3] = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * ( 1 + yawMod ) * throttle );*/
+
+    motorValues[0] = (int)( ( 1 - pitchMod ) * ( 1 - rollMod ) * ( 1 + yawMod ) * toMotorRange( controlValues[0] ) );
+    motorValues[1] = (int)( ( 1 + pitchMod ) * ( 1 - rollMod ) * ( 1 - yawMod ) * toMotorRange( controlValues[0] ) );
+    motorValues[2] = (int)( ( 1 - pitchMod ) * ( 1 + rollMod ) * ( 1 - yawMod ) * toMotorRange( controlValues[0] ) );
+    motorValues[3] = (int)( ( 1 + pitchMod ) * ( 1 + rollMod ) * ( 1 + yawMod ) * toMotorRange( controlValues[0] ) );
 }
 
 // main
@@ -264,27 +320,29 @@ int main(int argc, char const *argv[])
     int i;
     bool wasPID = false;
 
+    // RC receiver already set up
     setupPCA();
     setupTCP( TCP_PORT );
     setupMPU();
 
     // label lines
     cout << "\n**REAL TIME DATA**\n" << endl;
-    cout << "\t";   // FIFO
     cout << "RC RECEIVER\t\t\t\t\t";
     cout << "MOTORS\t\t\t\t\t\t";
-    cout << "ORIENTATION\t";
+    //cout << "ORIENTATION\t";
     cout << endl;
 
-    cout << "FIFO\t";
     cout << "THRO\tAILE\tELEV\tRUDD\tGEAR\tAUX1\t";
     cout << "ENABLE\tTEST\tM0  \tM1  \tM2  \tM3\t";
-    cout << "PITCH\t\tROLL\t\tYAW\t";
+    //cout << "PITCH\t\tROLL\t\tYAW\t";
     cout << endl;
 
     while( true )
     {
         dsm.update();
+        scaleRxValues();
+
+        //writeTCP();
         readTCP();
 
         fifoCount = mpu.getFIFOCount();
@@ -309,7 +367,7 @@ int main(int argc, char const *argv[])
         }
         
         // constrain motor values if enabled: MOTOR_MIN < value < MOTOR_MAX
-        if( motorsEnabled && !motorTesting )
+        if( motorsEnabled && !motorTesting && controlValues[5] > 500 )
         {
             for( i = 0; i < 4; i++ )
             {
@@ -329,12 +387,12 @@ int main(int argc, char const *argv[])
             pca.setPwm( i, 0, motorValues[i] );
 
         cout << "\r";
-        cout << fifoCount << "\t";
-        cout << dsm.values[0] << "  \t" << dsm.values[1] << "  \t" << dsm.values[2] << "  \t" << dsm.values[3] << "  \t" << dsm.values[4] << "  \t" << dsm.values[5] << "\t";
+        //cout << dsm.values[0] << "  \t" << dsm.values[1] << "  \t" << dsm.values[2] << "  \t" << dsm.values[3] << "  \t" << dsm.values[4] << "  \t" << dsm.values[5] << "\t";
+        printf( "%04d\t%04d\t%04d\t%04d\t%04d\t%04d\t", controlValues[0], controlValues[1], controlValues[2], controlValues[3], controlValues[4], controlValues[5] );
         cout << motorsEnabled << "  \t" << motorTesting << "  \t" << motorValues[0] << "  \t" << motorValues[1] << "  \t" << motorValues[2] << "  \t" << motorValues[3] << "  \t";
-        printf( "%+1.5f\t%+1.5f\t%+06d\t", pitchAngle, rollAngle, yawRate );
+        //printf( "%+1.5f\t%+1.5f\t%+06d\t", pitchAngle, rollAngle, yawRate );
         cout << flush;
-        delay(100);
+        delay(120);
     }
 
     return 0;

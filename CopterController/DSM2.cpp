@@ -8,19 +8,19 @@
 
 DSM2::DSM2()
 {
-    std::cout << "opening serial port..." << std::flush;
+    std::cout << "[ .... ] opening serial port..." << std::flush;
     fd = serialOpen( "/dev/ttyAMA0", 115200 );
     if( fd < 0 )
     {
-        std::cout << "FAILURE" << std::endl;
+        std::cout << "\r[ FAIL ]" << std::endl;
     }
     else
     {
-        std::cout << "SUCCESS " << fd << std::endl;
+        std::cout << "\r[ DONE ]" << fd << std::endl;
     }
-    std::cout << "flushing serial..." << std::flush;
+    std::cout << "[ .... ] flushing serial..." << std::flush;
     serialFlush(fd);
-    std::cout << "DONE" << std::endl;
+    std::cout << "\r[ DONE ]" << std::endl;
 }
 
 void DSM2::update()
