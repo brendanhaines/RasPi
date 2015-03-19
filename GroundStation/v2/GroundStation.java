@@ -50,7 +50,7 @@ class GroundStation implements ActionListener {
 
         controllerPanel = new DisplayController( receiveContent );
         tabbedPane.add( controllerPanel, "Controller" );
-        connectPanel.addActionListener( controllerPanel );
+        receiveContent.addActionListener( controllerPanel );
 
         motorTestPanel = new MotorTestPanel( sendContent );
         motorTestPanel.setEnabled( false );
